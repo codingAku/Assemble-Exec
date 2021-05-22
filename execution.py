@@ -16,12 +16,9 @@ class MyCPU:
     SF = 0 #sign flag
     CF = 0 #carry flag
     memory = [0]*32768 #default values zero
+    f = open("prog.asm", 'tw')
 
 
-
-
-#turns an integer to twos complement form of lenght 16 (if the number 
-#excedes 16 bits it returns a binary string of that lenght). return type:string parameter type:int
 def int_to_twos_complement(number):
     if number>0:
         binary_number = "{0:016b}".format(int(number), '016b')
@@ -37,6 +34,7 @@ def int_to_twos_complement(number):
         binary_number = "{0:016b}".format(0)
 
 
+
 #turns a twos complement represenation to the corresponding integer. return type:int, parameter type:string
 def twos_complement_to_int(string):
     if string[:1] == '1':
@@ -48,6 +46,52 @@ def twos_complement_to_int(string):
     else:
         return int(string,2)
         
+
+
+
+#not sure if a whole string, not just a character will be able to get printed
+def PRINT(addressing_mode, operand):
+    num = 0
+    if addressing_mode == 0: #immediate addressing
+        num = twos_complement_to_int(operand)
+
+    elif addressing_mode == 1 or addressing_mode == 2: #operand in register
+        reg = twos_complement_to_int(operand)
+        if reg == 0:
+            num = MyCPU.PC
+        elif reg == 1:
+            num = MyCPU.A
+        elif reg == 2:
+            num = MyCPU.B
+        elif reg == 3:
+            num = MyCPU.C
+        elif reg == 4:
+            num = MyCPU.D
+        elif reg == 5:
+            num = MyCPU.E
+        elif reg == 6:
+            num = MyCPU.S
+        else:
+            print("invalid register")
+
+        if addressing_mode == 2:
+            num = MyCPU.memory[(num/3)-1]
+    
+    elif addressing_mode == 3:
+        index = (twos_complement_to_int(operand)/3) -1
+        num = MyCPU.memory(index)
+    
+    MyCPU.f.write(chr(num))
+
+
+
+def READ(addressing_mode, operand):
+
+
+
+
+#turns an integer to twos complement form of lenght 16 (if the number 
+#excedes 16 bits it returns a binary string of that lenght). return type:string parameter type:int
 
 
 def interprete(line):
