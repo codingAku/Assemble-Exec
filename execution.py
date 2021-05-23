@@ -41,7 +41,565 @@ def twos_complement_to_int(string):
         return (-1*flipped_binary_number)
     else:
         return int(string,2)
+  
+  
+  
+  
+  
         
+#ecenurs part
+
+
+def LOAD(addressing, opcode):
+    if addressing == 0:
+        MyCPU.registers[1] = opcode
+        print(MyCPU.registers[1])
+    elif addressing == 1:
+        op2 = twos_complement_to_int(opcode)
+        MyCPU.registers[1] = MyCPU.registers[op2]
+        print(MyCPU.registers[1])
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        MyCPU.registers[1] = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        print(MyCPU.registers[1])
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        MyCPU.registers[1] = MyCPU.memory[X] + MyCPU.memory[X+1]
+        print(MyCPU.registers[1])
+
+
+
+
+
+def STORE(addressing, opcode):
+    if addressing == 1:
+        op2 = twos_complement_to_int(opcode)
+        MyCPU.registers[op2] = MyCPU.registers[1]
+        print(MyCPU.registers[op2])
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        s = MyCPU.registers[1]
+        first_half  = s[:len(s)//2]
+        second_half = s[len(s)//2:]
+        MyCPU.memory[MemoryInt] = first_half
+        MyCPU.memory[MemoryInt+1] = second_half
+        print(MyCPU.memory[MemoryInt]+ MyCPU.memory[MemoryInt+1])
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        s = MyCPU.registers[1]
+        first_half  = s[:len(s)//2]
+        second_half = s[len(s)//2:]
+        MyCPU.memory[X] = first_half
+        MyCPU.memory[X+1] = second_half
+        MyCPU.registers[1] = MyCPU.memory[X] + MyCPU.memory[X+1]
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1])
+
+
+
+
+def ADD(addressing, opcode):
+    if addressing == 0:
+        Var1 = twos_complement_to_int(opcode)
+        Var2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Var1 + Var2)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 + Var2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Var2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Var1 + Var2)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 + Var2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        
+        print(MyCPU.registers[1])
+
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = twos_complement_to_int(MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1])
+        Var2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Var1 + Var2)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 + Var2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result 
+        print(MyCPU.registers[1])
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.memory[X] +  MyCPU.memory[X+1])
+        Var2 = twos_complement_to_int(MyCPU.registers[1])
+        
+        Result = int_to_twos_complement(Var1 + Var2)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 + Var2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result 
+        print(MyCPU.registers[1])
+
+
+
+
+
+
+
+def SUB(addressing, opcode):
+    if addressing == 0:
+        opcode = twist(opcode)
+        ADD(0, opcode)
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = MyCPU.registers[X]
+        Var1 = twist(Var1)
+        Result = ADD(0, Var1)
+        print(MyCPU.registers[1])
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Var1 = twist(Var1)
+        ADD(0, Var1)
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Var1 = MyCPU.memory[X] +  MyCPU.memory[X+1]
+        Var1 = twist(Var1)
+        ADD(0, Var1)
+       
+       
+       
+     
+     
+     
+       
+       
+def INC(addressing, opcode):
+    if addressing == 0:
+        Num1 = twos_complement_to_int(opcode)
+        bin1 = int_to_twos_complement(Num1 + 1)
+        if len(str(bin1)) == 17:
+            bin1 = bin1[1]
+            MyCPU.CF = 1
+        if bin1[1] == 1:
+            MyCPU.SF = 1
+        if Num1 + 1 == 0:
+            MyCPU.ZF = 1
+
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Result = int_to_twos_complement(Var1 + 1)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 + 1 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[X] = Result
+        print(MyCPU.registers[X])
+            
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Num1 = twos_complement_to_int(Var1)
+        Result = int_to_twos_complement(Num1 + 1)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 + 1 == 0:
+            MyCPU.ZF = 1
+        first_half  = Result[:len(Result)//2]
+        second_half = Result[len(Result)//2:]
+        MyCPU.memory[MemoryInt] = first_half
+        MyCPU.memory[MemoryInt+1] = second_half
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+        
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Num1 = twos_complement_to_int(MyCPU.memory[X] +  MyCPU.memory[X+1])
+        Result = int_to_twos_complement(Num1 + 1)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 + 1 == 0:
+            MyCPU.ZF = 1
+        first_half  = Result[:len(Result)//2]
+        second_half = Result[len(Result)//2:]
+        MyCPU.memory[X] = first_half
+        MyCPU.memory[X+1] = second_half
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+def DEC(addressing, opcode):
+    if addressing == 0:
+        Num1 = twos_complement_to_int(opcode)
+        bin1 = int_to_twos_complement(opcode - 1)
+        if len(str(bin1)) == 17:
+            bin1 = bin1[1]
+            MyCPU.CF = 1
+        if bin1[1] == 1:
+            MyCPU.SF = 1
+        if Num1 - 1 == 0:
+            MyCPU.ZF = 1
+
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Result = int_to_twos_complement(Var1 - 1)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 - 1 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[X] = Result
+        print(MyCPU.registers[X])
+            
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Num1 = twos_complement_to_int(Var1)
+        Result = int_to_twos_complement(Num1 - 1)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 - 1 == 0:
+            MyCPU.ZF = 1
+        first_half  = Result[:len(Result)//2]
+        second_half = Result[len(Result)//2:]
+        MyCPU.memory[MemoryInt] = first_half
+        MyCPU.memory[MemoryInt+1] = second_half
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+        
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Num1 = twos_complement_to_int(MyCPU.memory[X] +  MyCPU.memory[X+1])
+        Result = int_to_twos_complement(Num1 - 1)
+        if len(str(Result)) == 17:
+            Result = Result[1:]
+            MyCPU.CF = 1
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 - 1 == 0:
+            MyCPU.ZF = 1
+        first_half  = Result[:len(Result)//2]
+        second_half = Result[len(Result)//2:]
+        MyCPU.memory[X] = first_half
+        MyCPU.memory[X+1] = second_half
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+       
+       
+       
+       
+       
+       
+def XOR(addressing, opcode):
+    if addressing == 0:
+        Num1 = twos_complement_to_int(opcode)
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 ^ Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 ^ Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+    
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Var1 ^ Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 ^ Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Num1 = twos_complement_to_int(Var1)
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 ^ Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 ^ Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+        
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Var1 = MyCPU.memory[X] +  MyCPU.memory[X+1]
+        Num2 = twos_complement_to_int(Var1)
+        Num1 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 ^ Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 ^ Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+def AND(addressing, opcode):
+    if addressing == 0:
+        Num1 = twos_complement_to_int(opcode)
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 & Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 & Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+    
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Var1 & Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 & Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Num1 = twos_complement_to_int(Var1)
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 & Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 & Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+        
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Var1 = MyCPU.memory[X] +  MyCPU.memory[X+1]
+        Num2 = twos_complement_to_int(Var1)
+        Num1 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 & Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 & Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+        
+        
+        
+        
+        
+        
+        
+        
+        
+def OR(addressing, opcode):
+    if addressing == 0:
+        Num1 = twos_complement_to_int(opcode)
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 | Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 | Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+    
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Var1 | Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Var1 | Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Num1 = twos_complement_to_int(Var1)
+        Num2 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 | Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 | Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+        
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Var1 = MyCPU.memory[X] +  MyCPU.memory[X+1]
+        Num2 = twos_complement_to_int(Var1)
+        Num1 = twos_complement_to_int(MyCPU.registers[1])
+        Result = int_to_twos_complement(Num1 | Num2)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if Num1 | Num2 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[1] = Result
+        print(MyCPU.registers[1])
+  
+  
+
+
+
+
+
+
+
+  
+def NOT(addressing, opcode):
+    if addressing == 0:
+        Num1 = twos_complement_to_int(opcode)
+        bin1 = int_to_twos_complement(~Num1)
+        
+        if bin[1] == '1':
+            MyCPU.SF = 1
+        if ~Num1 == 0:
+            MyCPU.ZF = 1
+    
+    elif addressing == 1:
+        X = twos_complement_to_int(opcode)
+        Var1 = twos_complement_to_int(MyCPU.registers[X])
+        Result = int_to_twos_complement(~Var1)
+        
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if ~Var1 == 0:
+            MyCPU.ZF = 1
+        MyCPU.registers[X] = Result
+        print(MyCPU.registers[X])
+            
+    elif addressing == 2:
+        X = twos_complement_to_int(opcode)
+        MemoryAd = MyCPU.registers[X]
+        MemoryInt = twos_complement_to_int(MemoryAd)
+        Var1 = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
+        Num1 = twos_complement_to_int(Var1)
+        Result = int_to_twos_complement(~Num1)
+    
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if ~Num1 == 0:
+            MyCPU.ZF = 1
+        first_half  = Result[:len(Result)//2]
+        second_half = Result[len(Result)//2:]
+        MyCPU.memory[MemoryInt] = first_half
+        MyCPU.memory[MemoryInt+1] = second_half
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+        
+    elif addressing == 3:
+        X = twos_complement_to_int(opcode)
+        Num1 = twos_complement_to_int(MyCPU.memory[X] +  MyCPU.memory[X+1])
+        Result = int_to_twos_complement(~Num1)
+        if Result[0] == '1':
+            MyCPU.SF = 1
+        if ~Num1 == 0:
+            MyCPU.ZF = 1
+        first_half  = Result[:len(Result)//2]
+        second_half = Result[len(Result)//2:]
+        MyCPU.memory[X] = first_half
+        MyCPU.memory[X+1] = second_half
+        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+
+
+           
+def twist(opcode):
+    Var = twos_complement_to_int(opcode)
+    opcode = int_to_twos_complement(-1*Var)
+    return opcode
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#demets part
+
+
+
+
+
 
 
 
