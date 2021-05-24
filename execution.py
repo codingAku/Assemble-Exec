@@ -1,4 +1,6 @@
 from collections import *
+import sys
+import textwrap
 from typing import BinaryIO
 #lets open a global boolean that holds if there is any runtime error or syntax error
 
@@ -6,28 +8,37 @@ from typing import BinaryIO
 #17 if there is any carry
 
 class MyCPU:
-    registers = [0,0,0,0,0,0]
+    registers = [0,0,0,0,0,0,65535]
     S = 65535 #will decrement with each call
     ZF = 0 #zero flag
     SF = 0 #sign flag
     CF = 0 #carry flag
     memory = ['00000000'] * 64 * 1024 #default values zero
-    f = open("prog.asm", 'tw')
+    f = open("prog1.asm", 'tw')
 
 
 def int_to_twos_complement(number):
     if number>0:
-        binary_number = "{0:016b}".format(int(number), '016b')
+        binary_number = "{0:016b}".format(int(number))
         return binary_number
     elif number < 0:
-        binary_number = "{0:016b}".format(int(-number))
-        binary_number = binary_number.replace("1",'x')
-        binary_number = binary_number.replace("0","1")
-        binary_number = binary_number.replace('x',"0")
-        flipped_binary_number = "{0:016b}".format(int(int(binary_number,2) + 1))
-        return flipped_binary_number
+        if len(bin(number)) > 18:
+            binary_number = "{0:016b}".format(int(-number))
+            binary_number = binary_number.replace("1",'x')
+            binary_number = binary_number.replace("0","1")
+            binary_number = binary_number.replace('x',"0")
+            flipped_binary_number = "{0:016b}".format(int(binary_number,2) + 1)
+            return flipped_binary_number
+        else:
+            binary_number = "{0:016b}".format(int(-number))
+            binary_number = binary_number.replace("1",'x')
+            binary_number = binary_number.replace("0","1")
+            binary_number = binary_number.replace('x',"0")
+            flipped_binary_number = "{0:016b}".format(int(binary_number,2) + 1)
+            return flipped_binary_number
     else:
         binary_number = "{0:016b}".format(number)
+        return binary_number
 
 
 
@@ -53,21 +64,17 @@ def twos_complement_to_int(string):
 def LOAD(addressing, opcode):
     if addressing == 0:
         MyCPU.registers[1] = opcode
-        print(MyCPU.registers[1])
     elif addressing == 1:
         op2 = twos_complement_to_int(opcode)
         MyCPU.registers[1] = MyCPU.registers[op2]
-        print(MyCPU.registers[1])
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
         MemoryAd = MyCPU.registers[X]
         MemoryInt = twos_complement_to_int(MemoryAd)
         MyCPU.registers[1] = MyCPU.memory[MemoryInt] + MyCPU.memory[MemoryInt+1]
-        print(MyCPU.registers[1])
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
         MyCPU.registers[1] = MyCPU.memory[X] + MyCPU.memory[X+1]
-        print(MyCPU.registers[1])
 
 
 
@@ -77,7 +84,6 @@ def STORE(addressing, opcode):
     if addressing == 1:
         op2 = twos_complement_to_int(opcode)
         MyCPU.registers[op2] = MyCPU.registers[1]
-        print(MyCPU.registers[op2])
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
         MemoryAd = MyCPU.registers[X]
@@ -87,7 +93,6 @@ def STORE(addressing, opcode):
         second_half = s[len(s)//2:]
         MyCPU.memory[MemoryInt] = first_half
         MyCPU.memory[MemoryInt+1] = second_half
-        print(MyCPU.memory[MemoryInt]+ MyCPU.memory[MemoryInt+1])
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
         s = MyCPU.registers[1]
@@ -96,7 +101,6 @@ def STORE(addressing, opcode):
         MyCPU.memory[X] = first_half
         MyCPU.memory[X+1] = second_half
         MyCPU.registers[1] = MyCPU.memory[X] + MyCPU.memory[X+1]
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1])
 
 
 
@@ -114,7 +118,6 @@ def ADD(addressing, opcode):
         if Var1 + Var2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
 
     elif addressing == 1:
         X = twos_complement_to_int(opcode)
@@ -130,7 +133,6 @@ def ADD(addressing, opcode):
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
         
-        print(MyCPU.registers[1])
 
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
@@ -147,7 +149,6 @@ def ADD(addressing, opcode):
         if Var1 + Var2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result 
-        print(MyCPU.registers[1])
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
         Var1 = twos_complement_to_int(MyCPU.memory[X] +  MyCPU.memory[X+1])
@@ -162,7 +163,6 @@ def ADD(addressing, opcode):
         if Var1 + Var2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result 
-        print(MyCPU.registers[1])
 
 
 
@@ -178,8 +178,7 @@ def SUB(addressing, opcode):
         X = twos_complement_to_int(opcode)
         Var1 = MyCPU.registers[X]
         Var1 = twist(Var1)
-        Result = ADD(0, Var1)
-        print(MyCPU.registers[1])
+        ADD(0, Var1)
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
         MemoryAd = MyCPU.registers[X]
@@ -205,7 +204,7 @@ def INC(addressing, opcode):
         Num1 = twos_complement_to_int(opcode)
         bin1 = int_to_twos_complement(Num1 + 1)
         if len(str(bin1)) == 17:
-            bin1 = bin1[1]
+            bin1 = bin1[1:]
             MyCPU.CF = 1
         if bin1[1] == 1:
             MyCPU.SF = 1
@@ -224,7 +223,6 @@ def INC(addressing, opcode):
         if Var1 + 1 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[X] = Result
-        print(MyCPU.registers[X])
             
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
@@ -244,7 +242,6 @@ def INC(addressing, opcode):
         second_half = Result[len(Result)//2:]
         MyCPU.memory[MemoryInt] = first_half
         MyCPU.memory[MemoryInt+1] = second_half
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
         
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
@@ -261,7 +258,6 @@ def INC(addressing, opcode):
         second_half = Result[len(Result)//2:]
         MyCPU.memory[X] = first_half
         MyCPU.memory[X+1] = second_half
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
                 
                 
                 
@@ -275,9 +271,9 @@ def INC(addressing, opcode):
 def DEC(addressing, opcode):
     if addressing == 0:
         Num1 = twos_complement_to_int(opcode)
-        bin1 = int_to_twos_complement(opcode - 1)
+        bin1 = int_to_twos_complement(Num1 - 1)
         if len(str(bin1)) == 17:
-            bin1 = bin1[1]
+            bin1 = bin1[1:]
             MyCPU.CF = 1
         if bin1[1] == 1:
             MyCPU.SF = 1
@@ -296,7 +292,6 @@ def DEC(addressing, opcode):
         if Var1 - 1 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[X] = Result
-        print(MyCPU.registers[X])
             
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
@@ -316,7 +311,6 @@ def DEC(addressing, opcode):
         second_half = Result[len(Result)//2:]
         MyCPU.memory[MemoryInt] = first_half
         MyCPU.memory[MemoryInt+1] = second_half
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
         
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
@@ -333,7 +327,6 @@ def DEC(addressing, opcode):
         second_half = Result[len(Result)//2:]
         MyCPU.memory[X] = first_half
         MyCPU.memory[X+1] = second_half
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
        
        
        
@@ -350,7 +343,6 @@ def XOR(addressing, opcode):
         if Num1 ^ Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
     
     elif addressing == 1:
         X = twos_complement_to_int(opcode)
@@ -362,7 +354,6 @@ def XOR(addressing, opcode):
         if Var1 ^ Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
         MemoryAd = MyCPU.registers[X]
@@ -376,7 +367,6 @@ def XOR(addressing, opcode):
         if Num1 ^ Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
         
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
@@ -389,7 +379,6 @@ def XOR(addressing, opcode):
         if Num1 ^ Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
         
         
         
@@ -411,7 +400,6 @@ def AND(addressing, opcode):
         if Num1 & Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
     
     elif addressing == 1:
         X = twos_complement_to_int(opcode)
@@ -423,7 +411,6 @@ def AND(addressing, opcode):
         if Var1 & Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
         MemoryAd = MyCPU.registers[X]
@@ -437,7 +424,7 @@ def AND(addressing, opcode):
         if Num1 & Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
+          
         
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
@@ -450,7 +437,7 @@ def AND(addressing, opcode):
         if Num1 & Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
+          
         
         
         
@@ -470,7 +457,7 @@ def OR(addressing, opcode):
         if Num1 | Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
+          
     
     elif addressing == 1:
         X = twos_complement_to_int(opcode)
@@ -482,7 +469,7 @@ def OR(addressing, opcode):
         if Var1 | Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
+          
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
         MemoryAd = MyCPU.registers[X]
@@ -496,7 +483,7 @@ def OR(addressing, opcode):
         if Num1 | Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
+          
         
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
@@ -509,7 +496,7 @@ def OR(addressing, opcode):
         if Num1 | Num2 == 0:
             MyCPU.ZF = 1
         MyCPU.registers[1] = Result
-        print(MyCPU.registers[1])
+          
   
   
 
@@ -529,6 +516,8 @@ def NOT(addressing, opcode):
             MyCPU.SF = 1
         if ~Num1 == 0:
             MyCPU.ZF = 1
+        MyCPU.registers[1] = bin1
+        
     
     elif addressing == 1:
         X = twos_complement_to_int(opcode)
@@ -539,8 +528,8 @@ def NOT(addressing, opcode):
             MyCPU.SF = 1
         if ~Var1 == 0:
             MyCPU.ZF = 1
-        MyCPU.registers[X] = Result
-        print(MyCPU.registers[X])
+        MyCPU.registers[1] = Result
+          
             
     elif addressing == 2:
         X = twos_complement_to_int(opcode)
@@ -554,11 +543,8 @@ def NOT(addressing, opcode):
             MyCPU.SF = 1
         if ~Num1 == 0:
             MyCPU.ZF = 1
-        first_half  = Result[:len(Result)//2]
-        second_half = Result[len(Result)//2:]
-        MyCPU.memory[MemoryInt] = first_half
-        MyCPU.memory[MemoryInt+1] = second_half
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+        MyCPU.registers[1] = Result
+          
         
     elif addressing == 3:
         X = twos_complement_to_int(opcode)
@@ -568,11 +554,8 @@ def NOT(addressing, opcode):
             MyCPU.SF = 1
         if ~Num1 == 0:
             MyCPU.ZF = 1
-        first_half  = Result[:len(Result)//2]
-        second_half = Result[len(Result)//2:]
-        MyCPU.memory[X] = first_half
-        MyCPU.memory[X+1] = second_half
-        print(MyCPU.memory[X]+ MyCPU.memory[X+1] )
+        MyCPU.registers[1] = Result
+          
 
 
            
@@ -627,7 +610,7 @@ def PRINT(addressing_mode, operand):
         print('invalid addressing mode')
         return
     
-    MyCPU.f.write(chr(num))
+    MyCPU.f.write(chr(num) + "\n")
 
 
 
@@ -648,7 +631,7 @@ def READ(addressing_mode, operand):
 
 
 def JB(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JB instruction')
        return
     
@@ -657,7 +640,7 @@ def JB(addressing_mode, operand):
         MyCPU.registers[0] = memory/3 #goes to the specified instruction
 
 def JBE(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
         print('wrong addressing mode: JBE instruction')
         return
     
@@ -666,7 +649,7 @@ def JBE(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JAE(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
         print('wrong addressing mode: JAE instruction')
         return
     
@@ -675,7 +658,7 @@ def JAE(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JA(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
         print('wrong addressing mode: JA instruction')
         return
     
@@ -684,7 +667,7 @@ def JA(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JNC(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
         print('wrong addressing mode: JNC instruction')
         return
     
@@ -694,7 +677,7 @@ def JNC(addressing_mode, operand):
 
 
 def JC(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JC instruction')
        return
     
@@ -703,26 +686,26 @@ def JC(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JNZ(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JNZ instruction')
        return
     
     if MyCPU.ZF == 0:
         memory = twos_complement_to_int(operand)
-        MyCPU.registers[0] = memory/3
+        MyCPU.registers[0] = memory
 
 
 def JNE(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JNE instruction')
        return
     
     if MyCPU.ZF == 0:
         memory = twos_complement_to_int(operand)
-        MyCPU.registers[0] = memory/3
+        MyCPU.registers[0] = memory
 
 def JZ(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JC instruction')
        return
     
@@ -731,7 +714,7 @@ def JZ(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
     
 def JE(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JC instruction')
        return
     
@@ -740,7 +723,7 @@ def JE(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JMP(addressing_mode, operand):
-    if addressing_mode != 0:
+    if addressing_mode != 3:
        print('wrong addressing mode: JMP instruction')
        return
     
@@ -763,7 +746,7 @@ def CMP(addressing_mode, operand):
         index = twos_complement_to_int(operand)
         subtract = MyCPU.memory[index] + MyCPU.memory[index+1]
 
-    SUB(A, subtract)
+    SUB(0, subtract)
 
 
 def POP(addressing_mode, operand):
@@ -848,27 +831,41 @@ def SHL(addressimg_mode, operand): #I really am not sure about the flags here ar
 
 
 def interprete(line):
-    line = line[0:6]
-    instruction = str(bin(int(line, 16)))
-    operand =instruction[-16:]
-    addressing_mode = int(instruction[-18:-16],2)
-    opcode = int(instruction[:-18], 2)
+    operand =('0' + line[-16:])
+    addressing_mode = twos_complement_to_int('0' + line[-18:-16])
+    opcode = twos_complement_to_int('0'+line[:-18])
     return opcode, addressing_mode,operand
 #the stack will be implemented as a part of memory block through utilizing stack pointer
-   
+
+
+def HALT():
+    return
 
 
 
-file = open("prog.asm", 'tr')
+file = open("prog.asm", "tr")
+i = 0
+lineCount = 0
 for line in file:
-    MyCPU.A = 3
-    opcode,addressing_mode, operand = interprete(line)
-    
+    if line[-1] == "\n":
+        line = line[:-1]
+    line = "{0:024b}".format(int(line, 16))
+    lineList = textwrap.wrap(line, 8)
+    MyCPU.memory[i] = lineList[0]
+    MyCPU.memory[i+1] = lineList[1]
+    MyCPU.memory[i+2] = lineList[2]
+    i += 3
+    lineCount+=1
+while(MyCPU.registers[0] != lineCount*3):
+    opcode,addressing_mode, operand = interprete(MyCPU.memory[MyCPU.registers[0]] + MyCPU.memory[MyCPU.registers[0]+1] + MyCPU.memory[MyCPU.registers[0]+2] )
+    MyCPU.registers[0] += 3
+
+
 
     if opcode<1 or opcode >28 or addressing_mode < 0 or  addressing_mode > 3:
         print('undefined instruction error')
     elif opcode == 1:
-        HALT(addressing_mode,operand)
+        HALT()
     elif opcode == 2:
         LOAD(addressing_mode,operand)
     elif opcode == 3:
@@ -903,7 +900,7 @@ for line in file:
         CMP(addressing_mode,operand)
     elif opcode == 18:
         JMP(addressing_mode,operand)
-    elif opcode == 19: #here there exists a zero flag check
+    elif opcode == 19: #here there exists a zero flag check 
         JZ(addressing_mode,operand)
         JE(addressing_mode,operand)
     elif opcode == 20: #here there exists a zero flag check
