@@ -9,7 +9,7 @@ from typing import BinaryIO
 
 class MyCPU:
     registers = [0,0,0,0,0,0,65535]
-    S = 65535 #will decrement with each call
+    S = 65534 #will decrement with each call
     ZF = 0 #zero flag
     SF = 0 #sign flag
     CF = 0 #carry flag
@@ -631,7 +631,7 @@ def READ(addressing_mode, operand):
 
 
 def JB(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JB instruction')
        return
     
@@ -640,7 +640,7 @@ def JB(addressing_mode, operand):
         MyCPU.registers[0] = memory/3 #goes to the specified instruction
 
 def JBE(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
         print('wrong addressing mode: JBE instruction')
         return
     
@@ -649,7 +649,7 @@ def JBE(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JAE(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
         print('wrong addressing mode: JAE instruction')
         return
     
@@ -658,7 +658,7 @@ def JAE(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JA(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
         print('wrong addressing mode: JA instruction')
         return
     
@@ -667,7 +667,7 @@ def JA(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JNC(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
         print('wrong addressing mode: JNC instruction')
         return
     
@@ -677,7 +677,7 @@ def JNC(addressing_mode, operand):
 
 
 def JC(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JC instruction')
        return
     
@@ -686,7 +686,7 @@ def JC(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JNZ(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JNZ instruction')
        return
     
@@ -696,7 +696,7 @@ def JNZ(addressing_mode, operand):
 
 
 def JNE(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JNE instruction')
        return
     
@@ -705,7 +705,7 @@ def JNE(addressing_mode, operand):
         MyCPU.registers[0] = memory
 
 def JZ(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JC instruction')
        return
     
@@ -714,7 +714,7 @@ def JZ(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
     
 def JE(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JC instruction')
        return
     
@@ -723,7 +723,7 @@ def JE(addressing_mode, operand):
         MyCPU.registers[0] = memory/3
 
 def JMP(addressing_mode, operand):
-    if addressing_mode != 3:
+    if addressing_mode != 0:
        print('wrong addressing mode: JMP instruction')
        return
     
@@ -772,6 +772,7 @@ def PUSH(addressing_mode, operand):
     MyCPU.memory -= 2
 
 def NOP(addressing_mode, operand):
+    MyCPU.registers[0] += 3
     return
 
 def SHR(addressing_mode, operand):
@@ -796,7 +797,7 @@ def SHR(addressing_mode, operand):
     MyCPU.registers[reg] = data
 
 
-def SHL(addressimg_mode, operand): #I really am not sure about the flags here are set true, especially sign flag
+def SHL(addressing_mode, operand): #I really am not sure about the flags here are set true, especially sign flag
     if addressing_mode != 1:
         print('invalid addressing mode: SHR instruction')
     reg = twos_complement_to_int(operand)
@@ -847,6 +848,8 @@ file = open("prog.asm", "tr")
 i = 0
 lineCount = 0
 for line in file:
+    if(line.length() == 0):
+        continue
     if line[-1] == "\n":
         line = line[:-1]
     line = "{0:024b}".format(int(line, 16))
