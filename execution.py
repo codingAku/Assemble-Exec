@@ -14,7 +14,7 @@ class MyCPU:
     SF = 0 #sign flag
     CF = 0 #carry flag
     memory = ['00000000'] * 64 * 1024 #default values zero
-    f = open("prog1.asm", 'tw')
+    f = open("program1.exe", 'tw')
 
 
 def int_to_twos_complement(number):
@@ -48,7 +48,7 @@ def twos_complement_to_int(string):
         string = string.replace("1",'x')
         string = string.replace("0","1")
         string = string.replace('x',"0")
-        flipped_binary_number = str(int(string,2) + 1)
+        flipped_binary_number = int(string,2) + 1
         return (-1*flipped_binary_number)
     else:
         return int(string,2)
@@ -109,7 +109,7 @@ def ADD(addressing, opcode):
     if addressing == 0:
         Var1 = twos_complement_to_int(opcode)
         Var2 = twos_complement_to_int(MyCPU.registers[1])
-        Result = int_to_twos_complement(Var1 + Var2)
+        Result = int_to_twos_complement((Var1 + Var2))
         if len(str(Result)) == 17:
             Result = Result[1:]
             MyCPU.CF = 1
@@ -732,17 +732,17 @@ def JMP(addressing_mode, operand):
 
 def CMP(addressing_mode, operand):
     subtract = ""
-    if operand == 0:
+    if addressing_mode == 0:
         subtract = operand
-    elif operand == 1: #operand in register
+    elif addressing_mode == 1: #operand in register
         reg = twos_complement_to_int(operand)
         subtract = MyCPU.registers[reg]
-    elif operand == 2: #memory address given in register
+    elif addressing_mode == 2: #memory address given in register
         reg = twos_complement_to_int(operand)
         regad = MyCPU.registers[reg]
         index = twos_complement_to_int(regad)
         subtract = MyCPU.memory[index]+MyCPU.memory[index+1]
-    elif operand == 3: #is memory address
+    elif addressing_mode == 3: #is memory address
         index = twos_complement_to_int(operand)
         subtract = MyCPU.memory[index] + MyCPU.memory[index+1]
 
@@ -753,9 +753,9 @@ def POP(addressing_mode, operand):
     if addressing_mode != 1:
         print('wrong addressing mode: POP instruction')
         return
-    if(MyCPU.S == 0):
+    if(MyCPU.S == 65534):
         print('invalid operation, stack empty: POP instruction')
-    data = MyCPU.memory[MyCPU.S]+MyCPU.memory[MyCPU.S+1]
+    data = MyCPU.memory[MyCPU.S+2]+MyCPU.memory[MyCPU.S+3]
     MyCPU.S += 2
     reg = twos_complement_to_int(operand)
     MyCPU.registers[reg] = data
@@ -765,15 +765,14 @@ def PUSH(addressing_mode, operand):
     reg = twos_complement_to_int(operand)
     if reg < 0 or reg > 6:
         print('invalid register: PUSH instruction')
-    high = MyCPU.registers[reg][0:9]
-    low = MyCPU.registers[reg][9:]
-    MyCPU.memory[MyCPU.S] = low
-    MyCPU.memory[MyCPU.S-1] = high
-    MyCPU.memory -= 2
+    high = MyCPU.registers[reg][0:8]
+    low = MyCPU.registers[reg][8:]
+    MyCPU.memory[MyCPU.S] = high
+    MyCPU.memory[MyCPU.S+1] = low
+    MyCPU.S -= 2
 
 def NOP(addressing_mode, operand):
-    MyCPU.registers[0] += 3
-    return
+    print("wtf is nop")    
 
 def SHR(addressing_mode, operand):
     if addressing_mode != 1:
@@ -844,11 +843,11 @@ def HALT():
 
 
 
-file = open("prog.asm", "tr")
+file = open("program.bin", "tr")
 i = 0
 lineCount = 0
 for line in file:
-    if(line.length() == 0):
+    if(len(line) == 0):
         continue
     if line[-1] == "\n":
         line = line[:-1]
@@ -859,13 +858,15 @@ for line in file:
     MyCPU.memory[i+2] = lineList[2]
     i += 3
     lineCount+=1
+
 while(MyCPU.registers[0] != lineCount*3):
     opcode,addressing_mode, operand = interprete(MyCPU.memory[MyCPU.registers[0]] + MyCPU.memory[MyCPU.registers[0]+1] + MyCPU.memory[MyCPU.registers[0]+2] )
+    temp = int(operand,2)
     MyCPU.registers[0] += 3
 
+   
 
-
-    if opcode<1 or opcode >28 or addressing_mode < 0 or  addressing_mode > 3:
+    if (opcode<1) or (opcode >28) or (addressing_mode < 0) or  (addressing_mode > 3):
         print('undefined instruction error')
     elif opcode == 1:
         HALT()

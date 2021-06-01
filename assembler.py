@@ -1,5 +1,6 @@
-import sys
 import os
+import sys
+import re
 from collections import *
 from typing import BinaryIO
 
@@ -16,11 +17,13 @@ reg_to_hex = {"PC":"0000000000000000", "A": "0000000000000001", "B":"00000000000
             "D":"0000000000000100", "E":"0000000000000101","S":"0000000000000110"}
 
 
-f = open("program.asm", 'tr')
+f = open(sys.argv[1], 'tr')
 count = 0
 for line in f:
     if line[-1:] == "\n":
         line = line[:-1]
+    found = re.search(r"\S+.\S+", line)
+    line = found.group(0)
     if line[-1:] == ":":
         if labels.get(line[:-1]) is not None:
                 print("no multiple occurence of a label is allowed")
@@ -40,17 +43,19 @@ def my_format(string):
 
 
 
-file = open("program.asm", 'tr')
+file = open(sys.argv[1], 'tr')
 output = open("program.bin", "wt")
 counter = 0
 
 for line in file:
+    
     counter += 1
-    if line[-1:] == "\n":
-        line = line[:-1]
-    tokens = line.split(" ")
-    tokens = [i for i in tokens if i != ""]
+    line = line.strip()
+    tokens = re.findall('\S+', line)
     A = tokens[0]
+    if A=="NOP":
+        output.write("380000\n")
+        continue
     if A not in instructions:
         if A[-1:] != ':': #my program doesn't allow space between label name and ':'
             print("invalid instruction")
@@ -63,17 +68,19 @@ for line in file:
     else:
         if A == "JNE":
             code = instructions.index("JNZ") + 1    
-        elif A == "JE":
+        elif (A == "JE"):
             code = instructions.index("JZ") + 1
         else:
             code = instructions.index(A) + 1
         hexadecimal = "{0:06b}".format(code)
         
-        if code == 1 or code == 13:
+        if code == 1 or code == 14:
             hexadecimal += "000000000000000000"
         else:
-            if len(tokens) != 2:
+            if (len(tokens) != 2):
                 print("not a valid instruction: too many variables")
+                print(A)
+                print(tokens[1])
                 flag = False
             B = tokens[1]
             if B in registers: #operand is given in the register
@@ -92,7 +99,7 @@ for line in file:
                 #this part is fuzzy, write/add after proffessor gives answer
             else: #it is immediate data
                 if B[0] == "'" and B[-1] == "'":
-                    hexadecimal += "00"
+                    hexadecimal += "00" 
                     if len(B) != 3:
                         print("invalid operand, only caracter allowed")
                         flag = False
@@ -101,12 +108,13 @@ for line in file:
                         if ascii_value > 255:
                             print("ascii character out of range")
                             flag = False
-                        hexadecimal += bin(ascii_value)[2:]
+                        hexadecimal += "{0:016b}".format(ascii_value)
+                    
                 elif labels.get(B) is not None: #if the operand is a label
                     
                     hexadecimal += "00"
                     hexadecimal += "{0:016b}".format(labels.get(B))
-                elif len(B) == 4: #modify this according to proffessors answer
+                elif (len(B) < 6) & (len(B)>0): #modify this according to proffessors answer
                     hexadecimal += "00"
                     for i in B:
                         if i not in ["A", "B", "C", "D", "E", "F", "0", "1","2","3","4","5","6","7","8","9"]:
