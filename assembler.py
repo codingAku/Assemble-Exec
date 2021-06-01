@@ -23,7 +23,10 @@ for line in f:
     if line[-1:] == "\n":
         line = line[:-1]
     found = re.search(r"\S+.\S+", line)
-    line = found.group(0)
+    if found:
+        line = found.group(0)
+    else:
+        continue
     if line[-1:] == ":":
         if labels.get(line[:-1]) is not None:
                 print("no multiple occurence of a label is allowed")
@@ -49,8 +52,10 @@ counter = 0
 
 for line in file:
     
-    counter += 1
     line = line.strip()
+    counter += 1
+    if len(line) == 0:
+        continue
     tokens = re.findall('\S+', line)
     A = tokens[0]
     if A=="NOP":
@@ -62,7 +67,7 @@ for line in file:
             flag = False
 
             break # I not sure this will behave the way I want it 
-    elif counter*3 >255:
+    elif counter*3 >2545656:
         print("the memory available is exceded, program too large")    
         flag = False
     else:
@@ -92,9 +97,8 @@ for line in file:
                     hexadecimal += "10"
                     hexadecimal += reg_to_hex[B]
                 else: #operand is a memory address
-                    address = B[1:-1]
                     hexadecimal += "11"
-                    hexadecimal += bin(int(address, 16))[2:]
+                    hexadecimal += "{0:016b}".format(int(B,16))
                 
                 #this part is fuzzy, write/add after proffessor gives answer
             else: #it is immediate data
