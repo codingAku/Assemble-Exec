@@ -4,6 +4,7 @@ import re
 from collections import *
 from typing import BinaryIO
 
+
 flag = True
 instructions = [ "HALT", "LOAD" , "STORE", "ADD", "SUB", "INC", "DEC", "XOR", "AND", "OR", 
     "NOT", "SHL", "SHR", "NOP", "PUSH", "POP", "CMP", "JMP", "JZ", "JNZ", "JC",
@@ -31,24 +32,34 @@ for line in f:
         if labels.get(line[:-1]) is not None:
                 print("no multiple occurence of a label is allowed")
                 flag = False
+        if line[0] in ["0","1","2","3","4","5","6","7","8","9"]:
+            print("wrong format of labels: digit is not allowed initially")
+            flag = False
         labels[line[:-1]] = count
         count -= 3
     count += 3
 f.close()
 
+#formats a given hex string to 16 bit string by prepending appropriate amount of zeros. 
+def my_format(string, code):
+    if code == 0:
+        zero = 6-len(string)
+        prepend = "0"*zero
+        string = prepend+string
+        return string
+    else:
+        zero = 4-len(string)
+        prepend = "0"*zero
+        string = prepend+string
+        return string
 
-def my_format(string):
-    zero = 6-len(string)
-    prepend = "0"*zero
-    string = prepend+string
-    return string
 
-
-
-
-file = open(sys.argv[1], 'tr')
-output = open("program.bin", "wt")
+ece = sys.argv[1]
+file = open(ece, 'tr')
+output = open((ece[0:-4] + ".bin"), "wt")
 counter = 0
+#file = open("input1.asm", 'tr')
+#output = open("input1.bin", "wt")
 
 for line in file:
     
@@ -65,8 +76,6 @@ for line in file:
         if A[-1:] != ':': #my program doesn't allow space between label name and ':'
             print("invalid instruction")
             flag = False
-
-            break # I not sure this will behave the way I want it 
     elif counter*3 >2545656:
         print("the memory available is exceded, program too large")    
         flag = False
@@ -118,15 +127,28 @@ for line in file:
                     
                     hexadecimal += "00"
                     hexadecimal += "{0:016b}".format(labels.get(B))
-                elif (len(B) < 6) & (len(B)>0): #modify this according to proffessors answer
+                else: #modify this according to proffessors answer
+                    if not(len(B) < 6) | (len(B)>0):
+                        print("hex format exception: illegal length for hex")
+                        flag = False
+                    elif B[0] != "0":
+                        if B[0] in ["A","B","C","D","E","F"]:
+                            print("hex format exception: illegal start of hex: should start with zero")
+                            flag = False
                     hexadecimal += "00"
+                    B = my_format(B, 1)
                     for i in B:
                         if i not in ["A", "B", "C", "D", "E", "F", "0", "1","2","3","4","5","6","7","8","9"]:
                             print("not a valid immediate data: not a hex value")
                             flag = False
                         hexadecimal += hex_equivalent.get(i)
-        output.write(my_format(hex(int(hexadecimal,2))[2:]).upper()+"\n")
-        
-        if not(flag):
-            os.remove("program.bin")
-            break
+                        
+        output.write(my_format(hex(int(hexadecimal,2))[2:], 0).upper()+"\n")
+
+    if flag == False:
+        output.close()
+        os.remove((ece[0:-4] + ".bin"))
+        break
+
+
+file.close()
