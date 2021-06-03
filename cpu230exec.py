@@ -1172,7 +1172,7 @@ def SHL(addressing_mode, operand):
 # return types ==> opcode: integer (from twos complement to corresponding int code of the instruction),
 # addressing_mode: integer (from 0 to 4), operand: binary string
 def interprete(line):
-    operand =(line[-16:])# I deleted sth here
+    operand =(line[-16:])
     addressing_mode = twos_complement_to_int('0' + line[-18:-16])
     opcode = twos_complement_to_int('0'+line[:-18])
     return opcode, addressing_mode,operand

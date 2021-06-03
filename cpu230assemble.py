@@ -109,7 +109,6 @@ for line in file:
                     hexadecimal += "11"
                     hexadecimal += "{0:016b}".format(int(B,16))
                 
-                #this part is fuzzy, write/add after proffessor gives answer
             else: #it is immediate data
                 if B[0] == "'" and B[-1] == "'":
                     hexadecimal += "00" 
